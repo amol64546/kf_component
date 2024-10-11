@@ -43,11 +43,6 @@ if [ $? -eq 0 ]; then
   curl --location --globoff --request POST "https://ig.aidtaas.com/bob-service/v1.0/ml/brick/image/$IMAGE_STATUS_ID?status=COMPLETED" \
   --data ''
   echo "Status update: COMPLETED"
-
-  # Remove the local Docker image
-  echo "Removing local Docker image..."
-  sudo docker rmi "$DOCKERHUB_USERNAME/$IMAGE_NAME:$IMAGE_TAG"
-  
 else
   echo "Docker image build and push failed."
 
@@ -56,6 +51,10 @@ else
   --data ''
   echo "Status update: FAILED"
 fi
+
+# Remove the local Docker image
+echo "Removing local Docker image..."
+sudo docker rmi "$DOCKERHUB_USERNAME/$IMAGE_NAME:$IMAGE_TAG"
 
 # Clean up the temporary Dockerfile
 rm -f Dockerfile
