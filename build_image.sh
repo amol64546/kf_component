@@ -33,11 +33,11 @@ fi
 # Build, tag, and push Docker image
 echo "Building and pushing Docker image..."
 sudo docker build --push \
-  --tag "$DOCKERHUB_USERNAME/$IMAGE_NANE:$IMAGE_TAG" .
+  --tag "$DOCKERHUB_USERNAME/$IMAGE_NAME:$IMAGE_TAG" .
 
 # Check if the build was successful
 if [ $? -eq 0 ]; then
-  echo "Docker image pushed successfully: $DOCKERHUB_USERNAME/$IMAGE_NANE:$IMAGE_TAG"
+  echo "Docker image pushed successfully: $DOCKERHUB_USERNAME/$IMAGE_NAME:$IMAGE_TAG"
   
   # If successful, make API call with status "COMPLETED"
   curl --location --globoff --request POST "https://ig.aidtaas.com/bob-service/v1.0/ml/brick/image/$IMAGE_STATUS_ID?status=COMPLETED" \
