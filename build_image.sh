@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Ensure required variables are passed
-if [ -z "$IMAGE_NANE" ] || [ -z "$PYTHON_SCRIPT" ] || [ -z "$IMAGE_TAG" ] || [ -z "$DOCKERHUB_USERNAME" ] || [ -z "$DOCKERHUB_TOKEN" ] || [ -z "$IMAGE_STATUS_ID" ]; then
+if [ -z "$IMAGE_NAME" ] || [ -z "$PYTHON_SCRIPT" ] || [ -z "$IMAGE_TAG" ] || [ -z "$DOCKERHUB_USERNAME" ] || [ -z "$DOCKERHUB_TOKEN" ] || [ -z "$IMAGE_STATUS_ID" ]; then
   echo "Error: Missing required environment variables."
   exit 1
 fi
