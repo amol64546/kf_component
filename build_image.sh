@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Ensure required variables are passed
-if [ -z "$IMAGE_NAME" ] || [ -z "$PYTHON_SCRIPT" ] || [ -z "$IMAGE_TAG" ] || [ -z "$DOCKERHUB_USERNAME" ] || [ -z "$DOCKERHUB_TOKEN" ] || [ -z "$IMAGE_STATUS_ID" ]; then
+if [ -z "$IMAGE_NAME" ] || [ -z "$SCRIPT_URL" ] || [ -z "$IMAGE_TAG" ] || [ -z "$DOCKERHUB_USERNAME" ] || [ -z "$DOCKERHUB_TOKEN" ] || [ -z "$IMAGE_STATUS_ID" ]; then
   echo "Error: Missing required environment variables."
   exit 1
 fi
@@ -14,8 +14,8 @@ COPY ./program.py /pipelines/component/src/program.py
 ENTRYPOINT ["python3", "/pipelines/component/src/program.py"]
 EOF
 
-echo "Fetching Python script from $PYTHON_SCRIPT..."
-curl -o ./program.py "$PYTHON_SCRIPT"
+echo "Fetching Python script from $SCRIPT_URL..."
+curl -o ./program.py "$SCRIPT_URL"
 
 if [ $? -ne 0 ]; then
   echo "Failed to download Python script."
