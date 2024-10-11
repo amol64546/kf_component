@@ -36,7 +36,7 @@ fi
 
 # Build, tag, and push Docker image
 echo "Building and pushing Docker image..."
-docker buildx build --push \
+sudo docker buildx build --push \
   --tag "$DOCKERHUB_USERNAME/$IMAGE_NANE:$IMAGE_TAG" .
 
 # Check if the build was successful
