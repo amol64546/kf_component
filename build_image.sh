@@ -22,10 +22,6 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# Set up Docker Buildx (if not already available, this step assumes buildx is available)
-echo "Setting up Docker Buildx..."
-docker buildx version || docker buildx create --use
-
 # Log in to Docker Hub
 echo "Logging in to Docker Hub..."
 echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
@@ -36,7 +32,7 @@ fi
 
 # Build, tag, and push Docker image
 echo "Building and pushing Docker image..."
-sudo docker buildx build --push \
+sudo docker build --push \
   --tag "$DOCKERHUB_USERNAME/$IMAGE_NANE:$IMAGE_TAG" .
 
 # Check if the build was successful
