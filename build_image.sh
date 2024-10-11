@@ -14,8 +14,8 @@ COPY ./program.py /pipelines/component/src/program.py
 ENTRYPOINT ["python3", "/pipelines/component/src/program.py"]
 EOF
 
-# Write the Python script to a local file
-echo "$PYTHON_SCRIPT" > ./program.py
+echo "Fetching Python script from $PYTHON_SCRIPT..."
+curl -o ./program.py "$PYTHON_SCRIPT"
 
 if [ $? -ne 0 ]; then
   echo "Failed to download Python script."
