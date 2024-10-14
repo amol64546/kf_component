@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Ensure required variables are passed
-if [ -z "$IMAGE_NAME" ] || [ -z "$SCRIPT_URL" ] || [ -z "$IMAGE_TAG" ] || [ -z "$DOCKERHUB_USERNAME" ] || [ -z "$DOCKERHUB_TOKEN" ] || [ -z "$IMAGE_STATUS_ID" ]; then
+if [ -z "$IMAGE_NAME" ] || [ -z "$GIT_REPO_URL" ] || [ -z "$IMAGE_TAG" ] || [ -z "$DOCKERHUB_USERNAME" ] || [ -z "$IMAGE_STATUS_ID" ]; then
   echo "Error: Missing required environment variables."
   exit 1
 fi
@@ -10,25 +10,10 @@ fi
 cat <<EOF > Dockerfile
 FROM python:3.7
 RUN python3 -m pip install --no-cache-dir keras
-COPY ./program.py /pipelines/component/src/program.py
-ENTRYPOINT ["python3", "/pipelines/component/src/program.py"]
+RUN git clone $GIT_REPO_URL /dir || { echo "Failed to clone GitHub repository." && exit 1; }
+ENTRYPOINT ["python3", "/dir/pipelines/component/src/program.py"]
 EOF
 
-echo "Fetching Python script from $SCRIPT_URL..."
-curl -o ./program.py "$SCRIPT_URL"
-
-if [ $? -ne 0 ]; then
-  echo "Failed to download Python script."
-  exit 1
-fi
-
-# Log in to Docker Hub
-echo "Logging in to Docker Hub..."
-echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
-if [ $? -ne 0 ]; then
-  echo "Docker login failed."
-  exit 1
-fi
 
 # Build, tag, and push Docker image
 echo "Building and pushing Docker image..."
