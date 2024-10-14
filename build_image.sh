@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Ensure required variables are passed
-if [ -z "$IMAGE_NAME" ] || [ -z "$GIT_REPO_URL" ] || [ -z "$IMAGE_TAG" ] || [ -z "$DOCKERHUB_USERNAME" ] || [ -z "$IMAGE_STATUS_ID" ]; then
+if [ -z "$IMAGE_NAME" ] || [ -z "$GIT_REPO_URL" ] || [ -z "$SERVER_URL" ] || [ -z "$IMAGE_TAG" ] || [ -z "$DOCKERHUB_USERNAME" ] || [ -z "$IMAGE_STATUS_ID" ]; then
   echo "Error: Missing required environment variables."
   exit 1
 fi
@@ -25,7 +25,7 @@ if [ $? -eq 0 ]; then
   echo "Docker image pushed successfully: $DOCKERHUB_USERNAME/$IMAGE_NAME:$IMAGE_TAG"
   
   # If successful, make API call with status "COMPLETED"
-  curl --location --globoff --request POST "https://ig.aidtaas.com/bob-service/v1.0/ml/brick/image/$IMAGE_STATUS_ID?status=COMPLETED" \
+  curl --location --globoff --request POST "$SERVER_URL/v1.0/ml/brick/image/$IMAGE_STATUS_ID?status=COMPLETED" \
   --data ''
   echo "Status update: COMPLETED"
 
@@ -37,7 +37,7 @@ else
   echo "Docker image build and push failed."
 
   # If failed, make API call with status "FAILED"
-  curl --location --globoff --request POST "https://ig.aidtaas.com/bob-service/v1.0/ml/brick/image/$IMAGE_STATUS_ID?status=FAILED" \
+  curl --location --globoff --request POST "$SERVER_URL/v1.0/ml/brick/image/$IMAGE_STATUS_ID?status=FAILED" \
   --data ''
   echo "Status update: FAILED"
 fi
