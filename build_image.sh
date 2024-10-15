@@ -40,7 +40,7 @@ if [ $? -eq 0 ]; then
     echo "Status update: COMPLETED"
   else
     # Log failure with the response code
-    echo "API call failed with status code: $response" >> /path/to/logfile.log
+    echo "API call failed with status code: $response"
   fi
 
   # Remove the local Docker image
@@ -59,7 +59,7 @@ else
     echo "Status update: FAILED"
   else
     # Log failure with the response code
-    echo "API call failed with status code: $response" >> /path/to/logfile.log
+    echo "API call failed with status code: $response"
   fi
 fi
 
