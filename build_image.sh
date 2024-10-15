@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Ensure required variables are passed
-if [ -z "$IMAGE_NAME" ] || [ -z "$GIT_REPO_URL" ] || [ -z "$SERVER_URL" ] || [ -z "$IMAGE_TAG" ] || [ -z "$DOCKERHUB_USERNAME" ] || [ -z "$IMAGE_STATUS_ID" ]; then
+if [ -z "$IMAGE_NAME" ] || [ -z "$GIT_REPO_URL" ] || [ -z "$SERVER_URL" ] || [ -z "$IMAGE_TAG" ] || [ -z "$DOCKERHUB_USERNAME" ] || [ -z "$IMAGE_ID" ]; then
   echo "Error: Missing required environment variables."
   exit 1
 fi
@@ -11,7 +11,7 @@ echo "Github repo url: $GIT_REPO_URL"
 echo "Server url: $SERVER_URL"
 echo "Image tag: $IMAGE_TAG"
 echo "Dockerhub username: $DOCKERHUB_USERNAME"
-echo "Image status id: $IMAGE_STATUS_ID"
+echo "Image id: $IMAGE_ID"
 
 # Create a Dockerfile dynamically
 cat <<EOF > Dockerfile
@@ -32,7 +32,7 @@ if [ $? -eq 0 ]; then
   echo "Docker image pushed successfully: $DOCKERHUB_USERNAME/$IMAGE_NAME:$IMAGE_TAG"
   
   # Make the API call
-  response=$(curl --location --globoff --request POST "$SERVER_URL/v1.0/ml/brick/image/$IMAGE_STATUS_ID?status=COMPLETED" \
+  response=$(curl --location --globoff --request POST "$SERVER_URL/v1.0/ml/brick/image/$IMAGE_ID?status=COMPLETED" \
     --data '' --write-out "%{http_code}" --silent --output /dev/null)
   
   # Check if the API call was successful (HTTP status code 2xx)
@@ -51,7 +51,7 @@ else
   echo "Docker image build and push failed."
 
   # If failed, make API call with status "FAILED"
-  response=$(curl --location --globoff --request POST "$SERVER_URL/v1.0/ml/brick/image/$IMAGE_STATUS_ID?status=FAILED" \
+  response=$(curl --location --globoff --request POST "$SERVER_URL/v1.0/ml/brick/image/$IMAGE_ID?status=FAILED" \
     --data '' --write-out "%{http_code}" --silent --output /dev/null)
   
   # Check if the API call was successful (HTTP status code 2xx)
