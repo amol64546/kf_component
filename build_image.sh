@@ -31,10 +31,17 @@ sudo docker build --push \
 if [ $? -eq 0 ]; then
   echo "Docker image pushed successfully: $DOCKERHUB_USERNAME/$IMAGE_NAME:$IMAGE_TAG"
   
-  # If successful, make API call with status "COMPLETED"
-  curl --location --globoff --request POST "$SERVER_URL/v1.0/ml/brick/image/$IMAGE_STATUS_ID?status=COMPLETED" \
-  --data ''
-  echo "Status update: COMPLETED"
+  # Make the API call
+  response=$(curl --location --globoff --request POST "$SERVER_URL/v1.0/ml/brick/image/$IMAGE_STATUS_ID?status=COMPLETED" \
+    --data '' --write-out "%{http_code}" --silent --output /dev/null)
+  
+  # Check if the API call was successful (HTTP status code 2xx)
+  if [[ "$response" -ge 200 && "$response" -lt 300 ]]; then
+    echo "Status update: COMPLETED"
+  else
+    # Log failure with the response code
+    echo "API call failed with status code: $response" >> /path/to/logfile.log
+  fi
 
   # Remove the local Docker image
   echo "Removing local Docker image..."
@@ -44,9 +51,16 @@ else
   echo "Docker image build and push failed."
 
   # If failed, make API call with status "FAILED"
-  curl --location --globoff --request POST "$SERVER_URL/v1.0/ml/brick/image/$IMAGE_STATUS_ID?status=FAILED" \
-  --data ''
-  echo "Status update: FAILED"
+  response=$(curl --location --globoff --request POST "$SERVER_URL/v1.0/ml/brick/image/$IMAGE_STATUS_ID?status=FAILED" \
+    --data '' --write-out "%{http_code}" --silent --output /dev/null)
+  
+  # Check if the API call was successful (HTTP status code 2xx)
+  if [[ "$response" -ge 200 && "$response" -lt 300 ]]; then
+    echo "Status update: FAILED"
+  else
+    # Log failure with the response code
+    echo "API call failed with status code: $response" >> /path/to/logfile.log
+  fi
 fi
 
 # Clean up the temporary Dockerfile
