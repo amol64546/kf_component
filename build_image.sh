@@ -6,6 +6,13 @@ if [ -z "$IMAGE_NAME" ] || [ -z "$GIT_REPO_URL" ] || [ -z "$SERVER_URL" ] || [ -
   exit 1
 fi
 
+echo "Image name: $IMAGE_NAME"
+echo "Github repo url: $GIT_REPO_URL"
+echo "Server url: $SERVER_URL"
+echo "Image tag: $IMAGE_TAG"
+echo "Dockerhub username: $DOCKERHUB_USERNAME"
+echo "Image status id: $IMAGE_STATUS_ID"
+
 # Create a Dockerfile dynamically
 cat <<EOF > Dockerfile
 FROM python:3.7
