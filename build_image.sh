@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Ensure required variables are passed
-if [ -z "$IMAGE_NAME" ] || [ -z "$GIT_REPO_URL" ] || [ -z "$SERVER_URL" ] || [ -z "$IMAGE_TAG" ] || [ -z "$DOCKERHUB_USERNAME" ] || [ -z "$IMAGE_ID" ] || [ -z "$PATH" ]; then
+if [ -z "$IMAGE_NAME" ] || [ -z "$GIT_REPO_URL" ] || [ -z "$SERVER_URL" ] || [ -z "$IMAGE_TAG" ] || [ -z "$DOCKERHUB_USERNAME" ] || [ -z "$IMAGE_ID" ] || [ -z "$PATH" ] || [ -z "$DOCKERHUB_TOKEN" ]; then
   echo "Error: Missing required environment variables."
   exit 1
 fi
@@ -23,10 +23,17 @@ ENTRYPOINT ["python3", "/dir$PATH"]
 EOF
 
 
+# Base64 encode the Docker credentials
+DOCKER_AUTH="$(echo -n "$DOCKERHUB_USERNAME:$DOCKERHUB_TOKEN" | base64)"
+
+# Set DOCKER_AUTH_CONFIG with encoded credentials
+export DOCKER_AUTH_CONFIG='{"auths":{"https://index.docker.io/v1/":{"auth":"'"$DOCKER_AUTH"'"}}}'
+
 # Build, tag, and push Docker image
 echo "Building and pushing Docker image..."
 sudo docker build --push \
   --tag "$DOCKERHUB_USERNAME/$IMAGE_NAME:$IMAGE_TAG" .
+
 
 # Check if the build was successful
 if [ $? -eq 0 ]; then
