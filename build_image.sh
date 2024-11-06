@@ -23,11 +23,8 @@ ENTRYPOINT ["python3", "/dir$PATH"]
 EOF
 
 
-# Base64 encode the Docker credentials
-DOCKER_AUTH="$(echo -n "$DOCKERHUB_USERNAME:$DOCKERHUB_TOKEN" | base64)"
-
-# Set DOCKER_AUTH_CONFIG with encoded credentials
-export DOCKER_AUTH_CONFIG='{"auths":{"https://index.docker.io/v1/":{"auth":"'"$DOCKER_AUTH"'"}}}'
+# Login into docker
+echo "$DOCKERHUB_TOKEN" | docker login -u $DOCKERHUB_USERNAME --password-stdin
 
 # Build, tag, and push Docker image
 echo "Building and pushing Docker image..."
