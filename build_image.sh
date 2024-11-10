@@ -1,6 +1,13 @@
 #!/bin/bash
 
 # Ensure required variables are passed
+echo "Dockerhub token: $DOCKERHUB_TOKEN"
+
+if [ -z "$IMAGE_NAME" ] || [ -z "$GIT_REPO_URL" ] || [ -z "$SERVER_URL" ] || [ -z "$IMAGE_TAG" ] || [ -z "$DOCKERHUB_USERNAME" ] || [ -z "$IMAGE_ID" ] || [ -z "$PATH" ] || [ -z "$DOCKERHUB_TOKEN" ]; then
+  echo "Error: Missing required environment variables."
+  exit 1
+fi
+
 echo "Image name: $IMAGE_NAME"
 echo "Github repo url: $GIT_REPO_URL"
 echo "Path: $PATH"
@@ -8,19 +15,6 @@ echo "Server url: $SERVER_URL"
 echo "Image tag: $IMAGE_TAG"
 echo "Dockerhub username: $DOCKERHUB_USERNAME"
 echo "Image id: $IMAGE_ID"
-
-if [ -z "$IMAGE_NAME" ] || [ -z "$GIT_REPO_URL" ] || [ -z "$SERVER_URL" ] || [ -z "$IMAGE_TAG" ] || [ -z "$DOCKERHUB_USERNAME" ] || [ -z "$IMAGE_ID" ] || [ -z "$PATH" ] || [ -z "$DOCKERHUB_TOKEN" ]; then
-  echo "Error: Missing required environment variables."
-  exit 1
-fi
-
-# echo "Image name: $IMAGE_NAME"
-# echo "Github repo url: $GIT_REPO_URL"
-# echo "Path: $PATH"
-# echo "Server url: $SERVER_URL"
-# echo "Image tag: $IMAGE_TAG"
-# echo "Dockerhub username: $DOCKERHUB_USERNAME"
-# echo "Image id: $IMAGE_ID"
 
 # Create a Dockerfile dynamically
 cat <<EOF > Dockerfile
