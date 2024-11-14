@@ -23,12 +23,6 @@ jobs:
 
     steps:
 
-      - name: Test Basic Commands
-        run: |
-          echo "Checking basic commands"
-          which sudo || echo "sudo not found"
-          which apt-get || echo "apt-get not found"
-
       - name: Fix PATH
         run: |
           export PATH=$PATH:/bin:/usr/bin
@@ -39,6 +33,12 @@ jobs:
         run: |
           apt-get update && apt-get install -y sudo apt-utils curl
           curl -fsSL https://get.docker.com | sh
+
+      - name: Test Basic Commands
+        run: |
+          echo "Checking basic commands"
+          which sudo || echo "sudo not found"
+          which apt-get || echo "apt-get not found"
           
       - name: Verify Docker Installation
         run: |
