@@ -22,7 +22,19 @@ jobs:
       DOCKERHUB_TOKEN: "dckr_pat_Snzzaoeq1bQWa_9clgOirVncSz4"
 
     steps:
-    
+
+      - name: Test Basic Commands
+        run: |
+          echo "Checking basic commands"
+          which sudo || echo "sudo not found"
+          which apt-get || echo "apt-get not found"
+
+      - name: Fix PATH
+        run: |
+          export PATH=$PATH:/bin:/usr/bin
+          echo $PATH
+          which sh || echo "sh not found even after updating PATH"
+
       - name: Install Basic Tools and Docker
         run: |
           apt-get update && apt-get install -y sudo apt-utils curl
