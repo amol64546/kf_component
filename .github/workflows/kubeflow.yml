@@ -1,13 +1,65 @@
-name: CI Workflow
+name: Build and Push Docker Image with API Status Update
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
 
-# Rest of the workflow
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
 
+    container:
+      image: docker:stable
+      options: --privileged  # Required for Docker-in-Docker setup
+
+    env:
+      IMAGE_NAME: "67359e34e7298e02167e9a79"
+      IMAGE_ID: "get-lines"
+      IMAGE_TAG: "1"
+      GIT_REPO_URL: "https://github.com/amol64546/ml-model.git"
+      PATH: "/pipelines/component/src/program.py"
+      SERVER_URL: "https://ig.aidtaas.com/bob-service"
+      DOCKERHUB_USERNAME: "amol64546"
+      DOCKERHUB_TOKEN: "dckr_pat_Snzzaoeq1bQWa_9clgOirVncSz4"
+
+    steps:
+      - name: Install Docker CLI in Docker Container
+        run: |
+          apk update && apk add docker-cli
+
+      - name: Log in to Docker Hub
+        run: echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+
+      - name: Generate Dockerfile
+        run: |
+          echo "FROM python:3.7" > Dockerfile
+          echo "RUN python3 -m pip install --no-cache-dir keras" >> Dockerfile
+          echo "RUN git clone $GIT_REPO_URL /dir || { echo 'Failed to clone GitHub repository.' && exit 1; }" >> Dockerfile
+          echo "ENTRYPOINT [\"python3\", \"/dir$PATH\"]" >> Dockerfile
+
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t "$DOCKERHUB_USERNAME/$IMAGE_NAME:$IMAGE_TAG" .
+          docker push "$DOCKERHUB_USERNAME/$IMAGE_NAME:$IMAGE_TAG"
+
+      - name: Update Status via API
+        run: |
+          if [ $? -eq 0 ]; then
+            response=$(curl --location --globoff --request POST "$SERVER_URL/v1.0/ml/brick/image/$IMAGE_ID?status=COMPLETED" \
+              --data '' --write-out "%{http_code}" --silent --output /dev/null)
+            if [[ "$response" -ge 200 && "$response" -lt 300 ]]; then
+              echo "Status update: COMPLETED"
+            else
+              echo "API call failed with status code: $response"
+            fi
+          else
+            response=$(curl --location --globoff --request POST "$SERVER_URL/v1.0/ml/brick/image/$IMAGE_ID?status=FAILED" \
+              --data '' --write-out "%{http_code}" --silent --output /dev/null)
+            if [[ "$response" -ge 200 && "$response" -lt 300 ]]; then
+              echo "Status update: FAILED"
+            else
+              echo "API call failed with status code: $response"
+            fi
+          fi
+
+      - name: Clean up Dockerfile
+        run: rm -f Dockerfile
