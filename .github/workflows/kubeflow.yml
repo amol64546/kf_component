@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-      image: docker:latest
+      image: docker:stable
       options: --privileged  # Required for Docker-in-Docker setup
 
     env:
