@@ -1,4 +1,4 @@
-name: Build and Push Docker Image
+name: Build and Push Docker Image with API Status Update
 
 on:
   workflow_dispatch:
@@ -8,24 +8,81 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      IMAGE_NAME: "67359e34e7298e02167e9a79"                 # Set your image name
-      IMAGE_ID: "get-lines"                           # Set your image ID
-      IMAGE_TAG: "1"                         # Set your image tag
-      GIT_REPO_URL: "https://github.com/amol64546/ml-model.git" # Set your GitHub repository URL
-      PATH: "/pipelines/component/src/program.py"                        # Path to the Python script in the cloned repo
-      SERVER_URL: "https://ig.aidtaas.com/bob-service"           # Server URL for API calls
+      IMAGE_NAME: "67359e34e7298e02167e9a79"
+      IMAGE_ID: "get-lines"
+      IMAGE_TAG: "1"
+      GIT_REPO_URL: "https://github.com/amol64546/ml-model.git"
+      PATH: "/pipelines/component/src/program.py"
+      SERVER_URL: "https://ig.aidtaas.com/bob-service"
       DOCKERHUB_USERNAME: "amol64546"
       DOCKERHUB_TOKEN: "dckr_pat_Snzzaoeq1bQWa_9clgOirVncSz4"
 
     steps:
-      - name: Install tar
-        run: apk update && apk add tar
-        
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Build, Push Docker Image and Update Status
+        run: |
+          #!/bin/bash
+          # Ensure required variables are passed
+          echo "Image name: $IMAGE_NAME"
+          echo "Image id: $IMAGE_ID"
+          echo "Image tag: $IMAGE_TAG"
+          echo "Github repo url: $GIT_REPO_URL"
+          echo "Path: $PATH"
+          echo "Server url: $SERVER_URL"
+          echo "Dockerhub username: $DOCKERHUB_USERNAME"
 
-      - name: Set executable permissions on the script
-        run: chmod +x build_and_push.sh
+          if [ -z "$IMAGE_NAME" ] || [ -z "$GIT_REPO_URL" ] || [ -z "$SERVER_URL" ] || [ -z "$IMAGE_TAG" ] || [ -z "$DOCKERHUB_USERNAME" ] || [ -z "$IMAGE_ID" ] || [ -z "$PATH" ] || [ -z "$DOCKERHUB_TOKEN" ]; then
+            echo "Error: Missing required environment variables."
+            exit 1
+          fi
 
-      - name: Run the Docker build and push script
-        run: ./build_and_push.sh
+          # Create a Dockerfile dynamically
+          cat <<EOF > Dockerfile
+          FROM python:3.7
+          RUN python3 -m pip install --no-cache-dir keras
+          RUN git clone $GIT_REPO_URL /dir || { echo "Failed to clone GitHub repository." && exit 1; }
+          ENTRYPOINT ["python3", "/dir$PATH"]
+          EOF
+
+          # Login into Docker
+          echo "$DOCKERHUB_TOKEN" | docker login -u $DOCKERHUB_USERNAME --password-stdin
+
+          # Build, tag, and push Docker image
+          echo "Building and pushing Docker image..."
+          docker build -t "$DOCKERHUB_USERNAME/$IMAGE_NAME:$IMAGE_TAG" .
+          docker push "$DOCKERHUB_USERNAME/$IMAGE_NAME:$IMAGE_TAG"
+
+          # Check if the build was successful
+          if [ $? -eq 0 ]; then
+            echo "Docker image pushed successfully: $DOCKERHUB_USERNAME/$IMAGE_NAME:$IMAGE_TAG"
+            
+            # Make the API call
+            response=$(curl --location --globoff --request POST "$SERVER_URL/v1.0/ml/brick/image/$IMAGE_ID?status=COMPLETED" \
+              --data '' --write-out "%{http_code}" --silent --output /dev/null)
+            
+            # Check if the API call was successful (HTTP status code 2xx)
+            if [[ "$response" -ge 200 && "$response" -lt 300 ]]; then
+              echo "Status update: COMPLETED"
+            else
+              echo "API call failed with status code: $response"
+            fi
+
+            # Remove the local Docker image
+            echo "Removing local Docker image..."
+            docker rmi "$DOCKERHUB_USERNAME/$IMAGE_NAME:$IMAGE_TAG"
+
+          else
+            echo "Docker image build and push failed."
+
+            # If failed, make API call with status "FAILED"
+            response=$(curl --location --globoff --request POST "$SERVER_URL/v1.0/ml/brick/image/$IMAGE_ID?status=FAILED" \
+              --data '' --write-out "%{http_code}" --silent --output /dev/null)
+            
+            if [[ "$response" -ge 200 && "$response" -lt 300 ]]; then
+              echo "Status update: FAILED"
+            else
+              echo "API call failed with status code: $response"
+            fi
+          fi
+
+          # Clean up the temporary Dockerfile
+          rm -f Dockerfile
