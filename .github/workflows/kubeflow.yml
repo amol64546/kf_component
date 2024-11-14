@@ -1,13 +1,28 @@
-name: CI Workflow
+name: Build and Push Docker Image
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
 
-# Rest of the workflow
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
 
+    env:
+      IMAGE_NAME: "example-image"                 # Set your image name
+      IMAGE_ID: "12345"                           # Set your image ID
+      IMAGE_TAG: "latest"                         # Set your image tag
+      GIT_REPO_URL: "https://github.com/user/repo" # Set your GitHub repository URL
+      PATH: "/app/main.py"                        # Path to the Python script in the cloned repo
+      SERVER_URL: "https://example.com"           # Server URL for API calls
+      DOCKERHUB_USERNAME: "${{ secrets.DOCKERHUB_USERNAME }}"
+      DOCKERHUB_TOKEN: "${{ secrets.DOCKERHUB_TOKEN }}"
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set executable permissions on the script
+        run: chmod +x build_and_push.sh
+
+      - name: Run the Docker build and push script
+        run: ./build_and_push.sh
