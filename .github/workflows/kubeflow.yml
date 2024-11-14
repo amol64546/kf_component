@@ -20,7 +20,7 @@ jobs:
     steps:
       - name: Build, Push Docker Image and Update Status
         run: |
-          #!/bin/bash
+          # !/bin/bash
           # Ensure required variables are passed
           echo "Image name: $IMAGE_NAME"
           echo "Image id: $IMAGE_ID"
@@ -36,12 +36,10 @@ jobs:
           fi
 
           # Create a Dockerfile dynamically
-          cat <<EOF > Dockerfile
-          FROM python:3.7
-          RUN python3 -m pip install --no-cache-dir keras
-          RUN git clone $GIT_REPO_URL /dir || { echo "Failed to clone GitHub repository." && exit 1; }
-          ENTRYPOINT ["python3", "/dir$PATH"]
-          EOF
+          echo "FROM python:3.7" > Dockerfile
+          echo "RUN python3 -m pip install --no-cache-dir keras" >> Dockerfile
+          echo "RUN git clone $GIT_REPO_URL /dir || { echo 'Failed to clone GitHub repository.' && exit 1; }" >> Dockerfile
+          echo "ENTRYPOINT [\"python3\", \"/dir$PATH\"]" >> Dockerfile
 
           # Login into Docker
           echo "$DOCKERHUB_TOKEN" | docker login -u $DOCKERHUB_USERNAME --password-stdin
