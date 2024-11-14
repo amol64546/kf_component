@@ -8,14 +8,14 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      IMAGE_NAME: "example-image"                 # Set your image name
-      IMAGE_ID: "12345"                           # Set your image ID
-      IMAGE_TAG: "latest"                         # Set your image tag
-      GIT_REPO_URL: "https://github.com/user/repo" # Set your GitHub repository URL
-      PATH: "/app/main.py"                        # Path to the Python script in the cloned repo
-      SERVER_URL: "https://example.com"           # Server URL for API calls
-      DOCKERHUB_USERNAME: "${{ secrets.DOCKERHUB_USERNAME }}"
-      DOCKERHUB_TOKEN: "${{ secrets.DOCKERHUB_TOKEN }}"
+      IMAGE_NAME: "67359e34e7298e02167e9a79"                 # Set your image name
+      IMAGE_ID: "get-lines"                           # Set your image ID
+      IMAGE_TAG: "1"                         # Set your image tag
+      GIT_REPO_URL: "https://github.com/amol64546/ml-model.git" # Set your GitHub repository URL
+      PATH: "/pipelines/component/src/program.py"                        # Path to the Python script in the cloned repo
+      SERVER_URL: "https://ig.aidtaas.com/bob-service"           # Server URL for API calls
+      DOCKERHUB_USERNAME: "amol64546"
+      DOCKERHUB_TOKEN: "dckr_pat_Snzzaoeq1bQWa_9clgOirVncSz4"
 
     steps:
       - name: Checkout code
