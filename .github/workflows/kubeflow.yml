@@ -6,6 +6,10 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
+    
+    container:
+      image: ubuntu:latest
+      options: --privileged 
 
     env:
       IMAGE_NAME: "67359e34e7298e02167e9a79"
@@ -18,6 +22,12 @@ jobs:
       DOCKERHUB_TOKEN: "dckr_pat_Snzzaoeq1bQWa_9clgOirVncSz4"
 
     steps:
+    
+      - name: Install Basic Tools and Docker
+        run: |
+          apt-get update && apt-get install -y sudo apt-utils curl
+          curl -fsSL https://get.docker.com | sh
+          
       - name: Verify Docker Installation
         run: |
           echo "Checking Docker installation..."
