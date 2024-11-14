@@ -23,28 +23,22 @@ jobs:
 
     steps:
 
-      - name: Fix PATH
-        run: |
-          export PATH=$PATH:/bin:/usr/bin
-          echo $PATH
-          which sh || echo "sh not found even after updating PATH"
-
       - name: Install Basic Tools and Docker
+        shell: bash
         run: |
           apt-get update && apt-get install -y sudo apt-utils curl
           curl -fsSL https://get.docker.com | sh
 
-      - name: Test Basic Commands
+      - name: Verify Basic Tools and Docker
+        shell: bash
         run: |
           echo "Checking basic commands"
           which sudo || echo "sudo not found"
           which apt-get || echo "apt-get not found"
-          
-      - name: Verify Docker Installation
-        run: |
           echo "Checking Docker installation..."
           docker --version || echo "Docker not found"
           which docker || echo "Docker path not found"
+          
       
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -56,6 +50,7 @@ jobs:
           password: ${{ env.DOCKERHUB_TOKEN }}
 
       - name: Build and Push Docker Image
+        shell: bash
         run: |
           docker buildx build --push \
             --tag ${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
@@ -64,6 +59,7 @@ jobs:
             --platform linux/amd64,linux/arm64 .
 
       - name: Update Status via API
+        shell: bash
         run: |
           if [ $? -eq 0 ]; then
             response=$(curl --location --globoff --request POST "$SERVER_URL/v1.0/ml/brick/image/$IMAGE_ID?status=COMPLETED" \
