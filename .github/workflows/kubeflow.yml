@@ -1,80 +1,90 @@
-name: Build and Push Docker Image with API Status Update
+name: CI with building Python app, building Docker image & pushing to Docker Hub
 
 on:
   workflow_dispatch:
+    inputs:
+      SERVICE_NAME:
+        required: true
+        type: string
+      DOCKER_TAG:
+        required: true
+        type: string
+      GIT_REPO_URL:
+        required: true
+        type: string
+      SCRIPT_PATH:  
+        required: true
+        type: string
+      GIT_USERNAME:
+        required: true
+        type: string
+      GIT_AUTHENTICATION: 
+        required: true
+        type: string
+      SERVER_URL:
+        required: true
+        type: string
+      API_TOKEN:
+        required: true
+        type: string
+      IMAGE_STATUS_ID:
+        required: true
+        type: string
 
+env:
+  SERVICE_NAME: ${{ inputs.SERVICE_NAME }}
+  DOCKER_TAG: ${{ inputs.DOCKER_TAG }}
+  GIT_REPO_URL: ${{ inputs.GIT_REPO_URL }}
+  SCRIPT_PATH: ${{ inputs.SCRIPT_PATH }}
+  GIT_USERNAME: ${{ inputs.GIT_USERNAME }}
+  GIT_AUTHENTICATION: ${{ inputs.GIT_AUTHENTICATION }}
+  SERVER_URL: ${{ inputs.SERVER_URL }}
+  API_TOKEN: ${{ inputs.API_TOKEN }}
+  IMAGE_STATUS_ID: ${{ inputs.IMAGE_STATUS_ID }}
+  DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+  DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+  
 jobs:
   build-and-push:
+    name: Build and Push Docker Image
     runs-on: ubuntu-latest
-    
-    container:
-      image: ubuntu:latest
-      options: --privileged 
-
-    env:
-      IMAGE_NAME: "67359e34e7298e02167e9a79"
-      IMAGE_ID: "get-lines"
-      IMAGE_TAG: "1"
-      GIT_REPO_URL: "https://github.com/amol64546/ml-model.git"
-      PATH: "/pipelines/component/src/program.py"
-      SERVER_URL: "https://ig.aidtaas.com/bob-service"
-      DOCKERHUB_USERNAME: "amol64546"
-      DOCKERHUB_TOKEN: "dckr_pat_Snzzaoeq1bQWa_9clgOirVncSz4"
 
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
 
-      - name: Install Basic Tools and Docker
-        shell: bash
-        run: |
-          apt-get update && apt-get install -y sudo apt-utils curl
-          curl -fsSL https://get.docker.com | sh
-
-      - name: Verify Basic Tools and Docker
-        shell: bash
-        run: |
-          echo "Checking basic commands"
-          which sudo || echo "sudo not found"
-          which apt-get || echo "apt-get not found"
-          echo "Checking Docker installation..."
-          docker --version || echo "Docker not found"
-          which docker || echo "Docker path not found"
-          
-      
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
       - name: Login to Docker Hub
         uses: docker/login-action@v2
         with:
-          username: ${{ env.DOCKERHUB_USERNAME }}
-          password: ${{ env.DOCKERHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and Push Docker Image
-        shell: bash
         run: |
           docker buildx build --push \
-            --tag ${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} \
-            --build-arg GIT_REPO_URL=${{ env.GIT_REPO_URL }} \
+            --tag ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.SERVICE_NAME }}:${{ env.DOCKER_TAG }} \
             --file docker/Dockerfile \
-            --platform linux/amd64,linux/arm64 .
-
+            --build-arg GIT_REPO_URL=${{ env.GIT_REPO_URL }} \
+            --build-arg SCRIPT_PATH=${{ env.SCRIPT_PATH }} \
+            --platform linux/amd64,linux/arm64 \
+            .
       - name: Update Status via API
         shell: bash
         run: |
+          STATUS="FAILED"
           if [ $? -eq 0 ]; then
-            response=$(curl --location --globoff --request POST "$SERVER_URL/v1.0/ml/brick/image/$IMAGE_ID?status=COMPLETED" \
-              --data '' --write-out "%{http_code}" --silent --output /dev/null)
-            if [[ "$response" -ge 200 && "$response" -lt 300 ]]; then
-              echo "Status update: COMPLETED"
-            else
-              echo "API call failed with status code: $response"
-            fi
+            STATUS="COMPLETED"
+          fi
+          
+          response=$(curl --location --globoff --request POST "${{ env.SERVER_URL }}/v1.0/ml/brick/image/${{ env.IMAGE_STATUS_ID }}?imageStatus=$STATUS" \
+            --header "Authorization: Bearer ${{ env.API_TOKEN }}" \
+            --data '' --write-out "%{http_code}" --silent --output /dev/null)
+            
+          if [[ "$response" -ge 200 && "$response" -lt 300 ]]; then
+            echo "Status update: $STATUS"
           else
-            response=$(curl --location --globoff --request POST "$SERVER_URL/v1.0/ml/brick/image/$IMAGE_ID?status=FAILED" \
-              --data '' --write-out "%{http_code}" --silent --output /dev/null)
-            if [[ "$response" -ge 200 && "$response" -lt 300 ]]; then
-              echo "Status update: FAILED"
-            else
-              echo "API call failed with status code: $response"
-            fi
+            echo "API call failed with status code: $response"
           fi
