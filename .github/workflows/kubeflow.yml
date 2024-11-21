@@ -30,6 +30,12 @@ on:
       IMAGE_STATUS_ID:
         required: true
         type: string
+      DOCKERHUB_USERNAME:
+        required: true
+        type: string
+      DOCKERHUB_TOKEN:
+        required: true
+        type: string
 
 env:
   SERVICE_NAME: ${{ inputs.SERVICE_NAME }}
@@ -41,8 +47,8 @@ env:
   SERVER_URL: ${{ inputs.SERVER_URL }}
   API_TOKEN: ${{ inputs.API_TOKEN }}
   IMAGE_STATUS_ID: ${{ inputs.IMAGE_STATUS_ID }}
-  DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-  DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+  DOCKERHUB_USERNAME: ${{ inputs.DOCKERHUB_USERNAME }}
+  DOCKERHUB_TOKEN: ${{ inputs.DOCKERHUB_TOKEN }}
   
 jobs:
   build-and-push:
